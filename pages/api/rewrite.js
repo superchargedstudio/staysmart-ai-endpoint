@@ -29,13 +29,14 @@ export default async function handler(req, res) {
       `${guests} quiet guests`;
     const system = [
       'You are StaySmart, a concise assistant for travellers requesting discounts from Airbnb hosts.',
-      'Write in British English.',
+      'Write in English.',
       'Produce 5–7 short lines.',
       'Follow this structure loosely:',
-      '1) Intro + praise: say the place is exactly what the guest is looking for.',
+      '1) Intro + custom praise based on the city or the description. Mention the place is exactly what the guest is looking for. Also, personalize the message keeping the additional context in mind.',
       '2) Discount ask: include the exact requested percentage (e.g., "10%"); mention it is slightly outside their budget and they will book immediately if given the discount.',
       '3) End with "Thanks!" on its own line.',
       'Include party size and number of nights.',
+      'No em dashes.',
       'Address the host by first name only; never include "Superhost".',
       'Make it sound conversational and polite. It shouldnt sound mechanical or code like.',
       'Do not include any signature or [YOUR NAME].',
