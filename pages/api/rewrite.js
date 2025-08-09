@@ -34,7 +34,7 @@ export default async function handler(req, res) {
       'Follow this structure loosely:',
       '1) Intro + custom praise based on the city or the description. Mention the place is exactly what the guest is looking for. Also, personalize the message keeping the additional context in mind.',
       '2) Discount ask: include the exact requested percentage (e.g., "10%"); mention it is slightly outside their budget and they will book immediately if given the discount.',
-      '3) End with "Thanks!" on its own line.',
+      '3) End with "Thank you!" on its own line.',
       'Include party size and number of nights.',
       'No em dashes.',
       'Address the host by first name only; never include "Superhost".',
