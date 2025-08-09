@@ -1,4 +1,4 @@
-// pages/api/rewrite.js — JS-only (no TypeScript deps)
+// pages/api/rewrite.js — JS-only, with robust errors
 export default async function handler(req, res) {
   // CORS preflight
   if (req.method === 'OPTIONS') {
@@ -10,16 +10,33 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST, OPTIONS');
-    res.status(405).json({ error: 'Method Not Allowed' });
-    return;
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
-    const { draft, listing, host, guests, nights, notes, style = 'friendly' } = req.body || {};
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      console.error('Missing OPENAI_API_KEY');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      return res.status(401).json({ error: 'Server misconfigured: missing OPENAI_API_KEY' });
+    }
+
+    const body = req.body || {};
+    const {
+      draft = '',
+      listing = '',
+      host = '',
+      guests = '',
+      nights,
+      notes = '',
+      style = 'friendly'
+    } = body;
 
     if (!draft || !nights) {
-      res.status(400).json({ error: 'Missing required fields' });
-      return;
+      console.error('Bad request body', body);
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      return res.status(400).json({ error: 'Missing required fields: draft and nights' });
     }
 
     const system = [
@@ -45,10 +62,11 @@ Context:
 
 Rewrite the message accordingly in 5–7 lines.`;
 
+    // Call OpenAI
     const resp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY || ''}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -62,25 +80,25 @@ Rewrite the message accordingly in 5–7 lines.`;
     });
 
     if (!resp.ok) {
-      const err = await resp.text();
-      res.status(502).json({ error: 'LLM error', detail: err });
-      return;
+      const detail = await resp.text();
+      console.error('OpenAI error', resp.status, detail);
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      return res.status(502).json({ error: 'LLM error', detail });
     }
 
     const data = await resp.json();
-    const message = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content
-      ? data.choices[0].message.content.trim()
-      : '';
-
+    const message = data?.choices?.[0]?.message?.content?.trim();
     if (!message) {
-      res.status(502).json({ error: 'Empty AI response' });
-      return;
+      console.error('Empty AI response', data);
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      return res.status(502).json({ error: 'Empty AI response' });
     }
 
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.status(200).json({ message });
-  } catch (e) {
-    res.status(500).json({ error: 'Server error', detail: e && e.message ? e.message : String(e) });
+    return res.status(200).json({ message });
+  } catch (err) {
+    console.error('Server error', err);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.status(500).json({ error: 'Server error', detail: String(err && err.message || err) });
   }
 }
