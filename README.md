@@ -1,15 +1,13 @@
-# StaySmart AI Endpoint
+# StaySmart AI Endpoint (JS-only, Pages Router)
 
-This is the AI rewriting endpoint for the StaySmart browser extension.
+This avoids TypeScript and experimental config issues.
 
-## API Endpoint
-POST /api/rewrite
-Body:
-{
-  "message": "Your input text"
-}
+## Deploy on Vercel
+1) Create/import this repo on Vercel (GitHub recommended).
+2) In Project Settings → Environment Variables, add `OPENAI_API_KEY`.
+3) Deploy.
 
-Response:
-{
-  "cleaned": "Cleaned up text"
-}
+## Endpoint
+POST https://YOUR-PROJECT.vercel.app/api/rewrite
+Body JSON: { draft, listing, host, guests, nights, notes }
+Returns: { message }
